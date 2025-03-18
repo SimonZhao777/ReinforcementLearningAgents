@@ -1,12 +1,18 @@
 import numpy as np
-from collections import defaultdict
+from collections import defaultdict, deque
+import random
 
 class QLearningAgent:
-    def __init__(self, learning_rate=0.1, discount_factor=0.95, epsilon=0.1):
+    def __init__(self, learning_rate=0.05, discount_factor=0.99, epsilon=0.2):
         self.learning_rate = learning_rate
         self.discount_factor = discount_factor
+        self.initial_epsilon = epsilon
         self.epsilon = epsilon
+        self.epsilon_decay = 0.995
+        self.min_epsilon = 0.01
         self.q_table = defaultdict(lambda: np.zeros(4))  # 4 possible actions
+        self.replay_buffer = deque(maxlen=10000)
+        self.batch_size = 32
         
     def get_action(self, state):
         if np.random.random() < self.epsilon:
@@ -31,3 +37,17 @@ class QLearningAgent:
     def load_q_table(self, filename):
         q_dict = np.load(filename, allow_pickle=True).item()
         self.q_table = defaultdict(lambda: np.zeros(4), q_dict) 
+    
+    def decay_epsilon(self):
+        self.epsilon = max(self.min_epsilon, self.epsilon * self.epsilon_decay) 
+    
+    def store_experience(self, state, action, reward, next_state):
+        self.replay_buffer.append((state, action, reward, next_state))
+    
+    def learn_from_replay(self):
+        if len(self.replay_buffer) < self.batch_size:
+            return
+            
+        batch = random.sample(self.replay_buffer, self.batch_size)
+        for state, action, reward, next_state in batch:
+            self.learn(state, action, reward, next_state) 

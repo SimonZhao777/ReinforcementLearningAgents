@@ -6,7 +6,7 @@ import numpy as np
 def train_agent(episodes=1000, render=False):
     # Initialize game and agent
     game = CatchGame()
-    agent = QLearningAgent(learning_rate=0.1, discount_factor=0.95, epsilon=0.1)
+    agent = QLearningAgent()
     
     # Training loop
     for episode in range(episodes):
@@ -26,13 +26,17 @@ def train_agent(episodes=1000, render=False):
             next_state, reward, done = game.step(action)
             total_reward += reward
             
-            # Learn from the experience
-            agent.learn(state, action, reward, next_state)
+            # Store experience and learn from replay
+            agent.store_experience(state, action, reward, next_state)
+            agent.learn_from_replay()
             
             state = next_state
         
+        # Decay epsilon after each episode
+        agent.decay_epsilon()
+        
         if episode % 100 == 0:
-            print(f"Episode: {episode}, Total Reward: {total_reward}")
+            print(f"Episode: {episode}, Total Reward: {total_reward}, Epsilon: {agent.epsilon:.3f}")
     
     # Save the trained Q-table
     agent.save_q_table('q_table.npy')
