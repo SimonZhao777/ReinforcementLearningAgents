@@ -3,21 +3,25 @@ from collections import defaultdict, deque
 import random
 
 class QLearningAgent:
-    def __init__(self, learning_rate=0.05, discount_factor=0.99, epsilon=0.2):
+    def __init__(self, learning_rate=0.05, discount_factor=0.99, epsilon=0.1):
         self.learning_rate = learning_rate
         self.discount_factor = discount_factor
         self.initial_epsilon = epsilon
         self.epsilon = epsilon
         self.epsilon_decay = 0.995
         self.min_epsilon = 0.01
-        self.q_table = defaultdict(lambda: np.zeros(4))  # 4 possible actions
+        self.num_actions = 2
+        self.q_table = defaultdict(lambda: np.zeros(self.num_actions))  # 4 possible actions
         self.replay_buffer = deque(maxlen=10000)
         self.batch_size = 32
         
-    def get_action(self, state):
-        if np.random.random() < self.epsilon:
-            return np.random.randint(0, 4)  # Random action
-        return np.argmax(self.q_table[state])
+    def get_action(self, state, training=True):
+        if np.all(self.q_table[state] == self.q_table[state][0]):
+            return np.random.randint(0, self.num_actions)  # Random action
+        elif training and np.random.random() < self.epsilon:
+            return np.random.randint(0, self.num_actions)  # Random action
+        else:
+            return np.argmax(self.q_table[state])
     
     def learn(self, state, action, reward, next_state):
         old_value = self.q_table[state][action]
@@ -36,7 +40,7 @@ class QLearningAgent:
     
     def load_q_table(self, filename):
         q_dict = np.load(filename, allow_pickle=True).item()
-        self.q_table = defaultdict(lambda: np.zeros(4), q_dict) 
+        self.q_table = defaultdict(lambda: np.zeros(self.num_actions), q_dict)
     
     def decay_epsilon(self):
         self.epsilon = max(self.min_epsilon, self.epsilon * self.epsilon_decay) 

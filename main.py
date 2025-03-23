@@ -17,7 +17,7 @@ def train_agent(episodes=1000, render=False):
         while not done:
             if render:
                 game.render()
-                pygame.time.wait(50)  # Slow down rendering for visualization
+                pygame.time.wait(5)  # Slow down rendering for visualization
             
             # Get action from agent
             action = agent.get_action(state)
@@ -27,8 +27,9 @@ def train_agent(episodes=1000, render=False):
             total_reward += reward
             
             # Store experience and learn from replay
-            agent.store_experience(state, action, reward, next_state)
-            agent.learn_from_replay()
+            agent.learn(state, action, reward, next_state)
+            # agent.store_experience(state, action, reward, next_state)
+            # agent.learn_from_replay()
             
             state = next_state
         
@@ -56,9 +57,9 @@ def play_game(episodes=5):
         
         while not done:
             game.render()
-            pygame.time.wait(50)  # Slow down for visualization
+            pygame.time.wait(10)  # Slow down for visualization
             
-            action = agent.get_action(state)
+            action = agent.get_action(state, training=False)
             state, reward, done = game.step(action)
             total_reward += reward
         
@@ -69,8 +70,8 @@ def play_game(episodes=5):
 if __name__ == "__main__":
     # Train the agent
     print("Training the agent...")
-    train_agent(episodes=10000, render=False)
+    train_agent(episodes=100000, render=False)
     
     # Play with the trained agent
     print("\nPlaying with the trained agent...")
-    play_game(episodes=2) 
+    play_game(episodes=5)

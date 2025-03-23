@@ -18,11 +18,12 @@ class CatchGame:
         
         # Game parameters
         self.player_size = 20
-        self.target_size = 15
+        self.target_size = 20
         self.obstacle_size = 20
         self.player_speed = 5
         self.target_speed = 3
         self.obstacle_speed = 4
+        self.grid_size = 30
         
         self.reset()
     
@@ -49,13 +50,14 @@ class CatchGame:
         # Discretize the state space for Q-learning
         # State includes: player_x, target_x, target_y, and positions of obstacles
         state = [
-            self.player_x // 50,  # Discretize player x position
-            self.target_x // 50,  # Discretize target x position
-            self.target_y // 50,  # Discretize target y position
+            self.player_x // self.grid_size,  # Discretize player x position
+            # self.player_y // self.grid_size,  # Discretize player x position
+            self.target_x // self.grid_size,  # Discretize target x position
+            self.target_y // self.grid_size,  # Discretize target y position
         ]
         # Add obstacle positions
         for obs in self.obstacles:
-            state.extend([obs['x'] // 50, obs['y'] // 50])
+            state.extend([obs['x'] // self.grid_size, obs['y'] // self.grid_size])
         return tuple(state)
     
     def step(self, action):
@@ -68,10 +70,10 @@ class CatchGame:
             self.player_x = max(0, self.player_x - self.player_speed)
         elif action == 1:  # Right
             self.player_x = min(self.width - self.player_size, self.player_x + self.player_speed)
-        elif action == 2:  # Up
-            self.player_y = max(0, self.player_y - self.player_speed)
-        elif action == 3:  # Down
-            self.player_y = min(self.height - self.player_size, self.player_y + self.player_speed)
+        # elif action == 2:  # Up
+        #     self.player_y = max(0, self.player_y - self.player_speed)
+        # elif action == 3:  # Down
+        #     self.player_y = min(self.height - self.player_size, self.player_y + self.player_speed)
         
         # Move target
         self.target_y += self.target_speed
@@ -86,7 +88,7 @@ class CatchGame:
         # Check for collisions
         if self.check_collision(self.player_x, self.player_y, self.player_size,
                              self.target_x, self.target_y, self.target_size):
-            reward = 100
+            reward = 500
             done = True
             self.reset()
         
