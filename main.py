@@ -27,9 +27,9 @@ def train_agent(episodes=1000, render=False):
             total_reward += reward
             
             # Store experience and learn from replay
-            agent.learn(state, action, reward, next_state)
-            # agent.store_experience(state, action, reward, next_state)
-            # agent.learn_from_replay()
+            # agent.learn(state, action, reward, next_state)
+            agent.store_experience(state, action, reward, next_state)
+            agent.learn_from_replay()
             
             state = next_state
         
