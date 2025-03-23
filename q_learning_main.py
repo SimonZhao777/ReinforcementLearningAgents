@@ -74,4 +74,4 @@ if __name__ == "__main__":
     
     # Play with the trained agent
     print("\nPlaying with the trained agent...")
-    play_game(episodes=5)
+    play_game(episodes=15)

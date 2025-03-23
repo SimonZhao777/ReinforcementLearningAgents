@@ -3,7 +3,7 @@ import numpy as np
 import random
 
 class CatchGame:
-    def __init__(self, width=800, height=600):
+    def __init__(self, width=400, height=300):
         pygame.init()
         self.width = width
         self.height = height
@@ -23,7 +23,7 @@ class CatchGame:
         self.player_speed = 5
         self.target_speed = 3
         self.obstacle_speed = 4
-        self.grid_size = 30
+        self.grid_size = 35
         
         self.reset()
     
@@ -38,7 +38,7 @@ class CatchGame:
         
         # Initialize obstacles
         self.obstacles = []
-        for _ in range(3):
+        for _ in range(2):
             self.obstacles.append({
                 'x': random.randint(0, self.width - self.obstacle_size),
                 'y': random.randint(100, self.height - 100)
@@ -52,12 +52,12 @@ class CatchGame:
         state = [
             self.player_x // self.grid_size,  # Discretize player x position
             # self.player_y // self.grid_size,  # Discretize player x position
-            self.target_x // self.grid_size,  # Discretize target x position
+            (self.player_x - self.target_x) // self.grid_size,  # Discretize target x position
             self.target_y // self.grid_size,  # Discretize target y position
         ]
         # Add obstacle positions
         for obs in self.obstacles:
-            state.extend([obs['x'] // self.grid_size, obs['y'] // self.grid_size])
+            state.extend([(self.player_x - obs['x']) // self.grid_size, obs['y'] // self.grid_size])
         return tuple(state)
     
     def step(self, action):
@@ -88,7 +88,7 @@ class CatchGame:
         # Check for collisions
         if self.check_collision(self.player_x, self.player_y, self.player_size,
                              self.target_x, self.target_y, self.target_size):
-            reward = 500
+            reward = 200
             done = True
             self.reset()
         

@@ -3,12 +3,12 @@ from collections import defaultdict, deque
 import random
 
 class QLearningAgent:
-    def __init__(self, learning_rate=0.05, discount_factor=0.99, epsilon=0.1):
+    def __init__(self, learning_rate=0.01, discount_factor=0.99, epsilon=0.1):
         self.learning_rate = learning_rate
         self.discount_factor = discount_factor
         self.initial_epsilon = epsilon
         self.epsilon = epsilon
-        self.epsilon_decay = 0.995
+        self.epsilon_decay = 0.998
         self.min_epsilon = 0.01
         self.num_actions = 2
         self.q_table = defaultdict(lambda: np.zeros(self.num_actions))  # 4 possible actions
