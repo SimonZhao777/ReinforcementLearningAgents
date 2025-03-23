@@ -16,7 +16,7 @@ class QLearningAgent:
         self.batch_size = 32
         
     def get_action(self, state, training=True):
-        if np.all(self.q_table[state] == self.q_table[state][0]):
+        if np.all(self.q_table[state] == self.q_table[state][0]):  # Perform random action for all unseen state
             return np.random.randint(0, self.num_actions)  # Random action
         elif training and np.random.random() < self.epsilon:
             return np.random.randint(0, self.num_actions)  # Random action
