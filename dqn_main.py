@@ -4,7 +4,7 @@ from q_learning import QLearningAgent
 from deep_q_learning import DQNAgent
 import numpy as np
 
-def train_agent(episodes=1000, render=False, use_dqn=False):
+def train_agent(episodes=1000, update_target_model_episodes=100, render=False, use_dqn=False):
     # Initialize game
     game = CatchGame()
 
@@ -21,6 +21,10 @@ def train_agent(episodes=1000, render=False, use_dqn=False):
         state = game.reset()
         total_reward = 0
         done = False
+
+        # Update target model every C episodes
+        if episode % update_target_model_episodes == 0:
+            agent.update_target_model()
 
         while not done:
             if render:
@@ -47,8 +51,13 @@ def train_agent(episodes=1000, render=False, use_dqn=False):
         # Decay epsilon after each episode
         agent.decay_epsilon()
 
+        # Print total reward and loss every 100 episodes
         if episode % 100 == 0:
-            print(f"Episode: {episode}, Total Reward: {total_reward}, Epsilon: {agent.epsilon:.3f}")
+            if use_dqn:
+                print(f"Episode: {episode}, Total Reward: {total_reward}, Epsilon: {agent.epsilon:.3f}, Average Loss: {agent.get_avg_loss():.4f}")
+                agent.save_model('dqn_model.pth')
+            else:
+                print(f"Episode: {episode}, Total Reward: {total_reward}, Epsilon: {agent.epsilon:.3f}")
 
     # Save the trained model or Q-table
     if use_dqn:
@@ -63,7 +72,7 @@ def play_game(episodes=5, use_dqn=False):
 
     if use_dqn:
         state_size = len(game.reset())
-        action_size = 2  # Left and Right
+        action_size = 4  # Left and Right
         agent = DQNAgent(state_size, action_size)
         agent.load_model('dqn_model.pth')
     else:
@@ -94,7 +103,7 @@ if __name__ == "__main__":
 
     # Train the agent
     print("Training the agent...")
-    train_agent(episodes=100000, render=False, use_dqn=USE_DQN)
+    train_agent(episodes=10000, update_target_model_episodes=100, render=False, use_dqn=USE_DQN)
 
     # Play with the trained agent
     print("\nPlaying with the trained agent...")

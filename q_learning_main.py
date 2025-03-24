@@ -70,7 +70,7 @@ def play_game(episodes=5):
 if __name__ == "__main__":
     # Train the agent
     print("Training the agent...")
-    train_agent(episodes=100000, render=False)
+    train_agent(episodes=10000, render=False)
     
     # Play with the trained agent
     print("\nPlaying with the trained agent...")

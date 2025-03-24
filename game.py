@@ -1,9 +1,10 @@
 import pygame
 import numpy as np
 import random
+import cv2
 
 class CatchGame:
-    def __init__(self, width=400, height=300):
+    def __init__(self, width=800, height=600):
         pygame.init()
         self.width = width
         self.height = height
@@ -23,7 +24,7 @@ class CatchGame:
         self.player_speed = 5
         self.target_speed = 3
         self.obstacle_speed = 4
-        self.grid_size = 35
+        self.grid_size = 20
         
         self.reset()
     
@@ -38,7 +39,7 @@ class CatchGame:
         
         # Initialize obstacles
         self.obstacles = []
-        for _ in range(2):
+        for _ in range(3):
             self.obstacles.append({
                 'x': random.randint(0, self.width - self.obstacle_size),
                 'y': random.randint(100, self.height - 100)
@@ -51,13 +52,15 @@ class CatchGame:
         # State includes: player_x, target_x, target_y, and positions of obstacles
         state = [
             self.player_x // self.grid_size,  # Discretize player x position
-            # self.player_y // self.grid_size,  # Discretize player x position
-            (self.player_x - self.target_x) // self.grid_size,  # Discretize target x position
+            self.player_y // self.grid_size,  # Discretize player x position
+            # (self.player_x - self.target_x) // self.grid_size,  # Discretize target x position
+            self.target_x // self.grid_size,  # Discretize target x position
             self.target_y // self.grid_size,  # Discretize target y position
         ]
         # Add obstacle positions
         for obs in self.obstacles:
-            state.extend([(self.player_x - obs['x']) // self.grid_size, obs['y'] // self.grid_size])
+            # state.extend([(self.player_x - obs['x']) // self.grid_size, obs['y'] // self.grid_size])
+            state.extend([obs['x'] // self.grid_size, obs['y'] // self.grid_size])
         return tuple(state)
     
     def step(self, action):
@@ -70,10 +73,10 @@ class CatchGame:
             self.player_x = max(0, self.player_x - self.player_speed)
         elif action == 1:  # Right
             self.player_x = min(self.width - self.player_size, self.player_x + self.player_speed)
-        # elif action == 2:  # Up
-        #     self.player_y = max(0, self.player_y - self.player_speed)
-        # elif action == 3:  # Down
-        #     self.player_y = min(self.height - self.player_size, self.player_y + self.player_speed)
+        elif action == 2:  # Up
+            self.player_y = max(0, self.player_y - self.player_speed)
+        elif action == 3:  # Down
+            self.player_y = min(self.height - self.player_size, self.player_y + self.player_speed)
         
         # Move target
         self.target_y += self.target_speed
@@ -132,6 +135,14 @@ class CatchGame:
                            (obs['x'], obs['y'], self.obstacle_size, self.obstacle_size))
         
         pygame.display.flip()
+
+    def get_screen(self):
+        """获取当前游戏画面并缩放到固定大小"""
+        screen = pygame.surfarray.array3d(pygame.display.get_surface())
+        screen = np.transpose(screen, (1, 0, 2))  # 转置以匹配 PyTorch 格式
+        screen = cv2.resize(screen, (84, 84))  # 缩放到 84x84
+        screen = screen / 255.0  # 归一化到 [0, 1]
+        return screen
     
     def close(self):
         pygame.quit() 

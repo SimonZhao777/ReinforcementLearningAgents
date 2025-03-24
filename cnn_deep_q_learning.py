@@ -6,9 +6,10 @@ import torch.nn as nn
 import torch.optim as optim
 
 class DQNAgent:
-    def __init__(self, state_size, action_size, learning_rate=0.001, discount_factor=0.99, epsilon=1.0):
-        self.state_size = state_size
+    def __init__(self, state_size, action_size, frame_stack=4, learning_rate=0.001, discount_factor=0.99, epsilon=1.0):
+        self.state_size = state_size  # 图像大小 (84, 84, 3)
         self.action_size = action_size
+        self.frame_stack = frame_stack  # 使用连续的帧数
         self.learning_rate = learning_rate
         self.discount_factor = discount_factor
         self.epsilon = epsilon
@@ -17,13 +18,13 @@ class DQNAgent:
         self.batch_size = 32
         self.memory = deque(maxlen=10000)
 
-        # Check if GPU is available
+        # 检查 GPU 是否可用
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         print(f"Using device: {self.device}")
 
-        # Build the neural network models
-        self.model = self._build_model().to(self.device)
-        self.target_model = self._build_model().to(self.device)
+        # 构建 CNN 模型
+        self.model = self._build_cnn_model().to(self.device)
+        self.target_model = self._build_cnn_model().to(self.device)
         self.update_target_model()
 
         self.optimizer = optim.Adam(self.model.parameters(), lr=self.learning_rate)
@@ -31,25 +32,39 @@ class DQNAgent:
         # Loss tracking
         self.losses = []
 
-    def _build_model(self):
+    def _build_cnn_model(self):
+        """构建卷积神经网络"""
         model = nn.Sequential(
-            nn.Linear(self.state_size, 64),
+            nn.Conv2d(self.frame_stack * 3, 32, kernel_size=8, stride=4),  # 输入通道数为 frame_stack * 3
             nn.ReLU(),
-            nn.Linear(64, 64),
+            nn.Conv2d(32, 64, kernel_size=4, stride=2),
             nn.ReLU(),
-            nn.Linear(64, self.action_size)
+            nn.Conv2d(64, 64, kernel_size=3, stride=1),
+            nn.ReLU(),
+            nn.Flatten(),
+            nn.Linear(64 * 7 * 7, 512),  # 根据卷积输出调整线性层输入大小
+            nn.ReLU(),
+            nn.Linear(512, self.action_size)
         )
         return model
 
     def update_target_model(self):
         self.target_model.load_state_dict(self.model.state_dict())
 
+    def preprocess_state(self, state_frames):
+        """将多帧图像堆叠为单个张量"""
+        # 将多帧图像堆叠在一起 (frame_stack * 3 通道)
+        stacked_frames = np.concatenate(state_frames, axis=2)  # Shape: (84, 84, frame_stack * 3)
+
+        # 转换为 PyTorch 格式 (batch_size, channels, height, width)
+        state_tensor = torch.FloatTensor(np.transpose(stacked_frames, (2, 0, 1))).unsqueeze(0).to(self.device)
+        return state_tensor
+
     def get_action(self, state, training=True):
         if training and np.random.rand() <= self.epsilon:
             return random.randrange(self.action_size)  # Explore
         with torch.no_grad():
-            state_tensor = torch.FloatTensor(state).unsqueeze(0).to(self.device)
-            q_values = self.model(state_tensor)
+            q_values = self.model(state)
         return torch.argmax(q_values, dim=1).item()  # Exploit
 
     def store_experience(self, state, action, reward, next_state, done):
@@ -60,10 +75,10 @@ class DQNAgent:
             return
 
         minibatch = random.sample(self.memory, self.batch_size)
-        states = torch.FloatTensor([experience[0] for experience in minibatch]).to(self.device)
+        states = torch.cat([experience[0] for experience in minibatch]).to(self.device)
         actions = torch.LongTensor([experience[1] for experience in minibatch]).to(self.device)
         rewards = torch.FloatTensor([experience[2] for experience in minibatch]).to(self.device)
-        next_states = torch.FloatTensor([experience[3] for experience in minibatch]).to(self.device)
+        next_states = torch.cat([experience[3] for experience in minibatch]).to(self.device)
         dones = torch.FloatTensor([experience[4] for experience in minibatch]).to(self.device)
 
         # Get Q-values for the next states using the target model
@@ -97,8 +112,7 @@ class DQNAgent:
 
     def get_avg_loss(self):
         if len(self.losses) == 0:
-            return
+            return 0
         avg_loss = sum(self.losses) / len(self.losses)
-        # print(f"Episode: {episode}, Average Loss: {avg_loss:.4f}")
-        self.losses.clear()  # Clear the losses after printing
+        self.losses.clear()  # 清空损失记录
         return avg_loss
