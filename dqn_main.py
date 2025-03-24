@@ -22,10 +22,6 @@ def train_agent(episodes=1000, update_target_model_episodes=100, render=False, u
         total_reward = 0
         done = False
 
-        # Update target model every C episodes
-        if episode % update_target_model_episodes == 0:
-            agent.update_target_model()
-
         while not done:
             if render:
                 game.render()
@@ -55,9 +51,13 @@ def train_agent(episodes=1000, update_target_model_episodes=100, render=False, u
         if episode % 100 == 0:
             if use_dqn:
                 print(f"Episode: {episode}, Total Reward: {total_reward}, Epsilon: {agent.epsilon:.3f}, Average Loss: {agent.get_avg_loss():.4f}")
-                agent.save_model('dqn_model.pth')
             else:
                 print(f"Episode: {episode}, Total Reward: {total_reward}, Epsilon: {agent.epsilon:.3f}")
+
+        # Update target model every C episodes
+        if episode % update_target_model_episodes == 0:
+            agent.update_target_model()
+            agent.save_model('dqn_model.pth')
 
     # Save the trained model or Q-table
     if use_dqn:
