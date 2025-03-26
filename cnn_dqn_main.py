@@ -6,7 +6,7 @@ from cnn_deep_q_learning import DQNAgent
 from q_learning import QLearningAgent
 import numpy as np
 
-def train_agent(episodes=1000, update_target_model_episodes=100, render=False, use_dqn=True):
+def train_agent(episodes=1000, update_target_model_episodes=100, use_dqn=True):
     game = CatchGame()
     frame_stack = 4  # 使用 4 帧作为一个状态
 
@@ -36,18 +36,18 @@ def train_agent(episodes=1000, update_target_model_episodes=100, render=False, u
         done = False
 
         while not done:
-            if render:
-                game.render()
-                # pygame.time.wait(5)
+            game.render()
+            # pygame.time.wait(5)
 
             # 获取动作
             action = agent.get_action(state, training=True)
 
             # 执行动作并获取下一状态
+            reward, done = game.step(action)[1:]  # 先执行动作再获取最新的state
+            game.render()  # 需要先render才能get_screen
             next_screen = game.get_screen()
             state_frames.append(next_screen)
             next_state = agent.preprocess_state(state_frames)
-            reward, done = game.step(action)[1:]
 
             # 存储经验和学习
             if use_dqn:
@@ -118,10 +118,11 @@ def play_game(episodes=5, use_dqn=True):
             action = agent.get_action(state, training=False)
 
             # 执行动作并获取下一状态
+            reward, done = game.step(action)[1:]  # 先执行动作再获取最新的state
+            game.render()  # 需要先render才能get_screen
             next_screen = game.get_screen()
             state_frames.append(next_screen)
             next_state = agent.preprocess_state(state_frames)
-            reward, done = game.step(action)[1:]
 
             state = next_state
             total_reward += reward
@@ -134,7 +135,7 @@ if __name__ == "__main__":
     USE_DQN = True  # 设置为 False 使用 Q-learning
 
     print("Training the agent...")
-    train_agent(episodes=10000, update_target_model_episodes=100, render=True, use_dqn=USE_DQN)
+    train_agent(episodes=10000, update_target_model_episodes=50, use_dqn=USE_DQN)
 
     print("\nPlaying with the trained agent...")
     play_game(episodes=15, use_dqn=USE_DQN)

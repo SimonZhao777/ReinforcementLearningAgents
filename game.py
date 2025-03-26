@@ -21,9 +21,9 @@ class CatchGame:
         self.player_size = 20
         self.target_size = 20
         self.obstacle_size = 20
-        self.player_speed = 5
-        self.target_speed = 3
-        self.obstacle_speed = 4
+        self.player_speed = 10
+        self.target_speed = 6
+        self.obstacle_speed = 8
         self.grid_size = 20
         
         self.reset()
