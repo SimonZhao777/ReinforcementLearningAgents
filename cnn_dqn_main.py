@@ -38,7 +38,7 @@ def train_agent(episodes=1000, update_target_model_episodes=100, render=False, u
         while not done:
             if render:
                 game.render()
-                pygame.time.wait(5)
+                # pygame.time.wait(5)
 
             # 获取动作
             action = agent.get_action(state, training=True)
@@ -62,7 +62,7 @@ def train_agent(episodes=1000, update_target_model_episodes=100, render=False, u
 
         agent.decay_epsilon()
 
-        if episode % 10 == 0:
+        if episode % 1 == 0:
             if use_dqn:
                 print(f"Episode: {episode}, Total Reward: {total_reward}, Epsilon: {agent.epsilon:.3f}, Average Loss: {agent.get_avg_loss():.4f}")
             else:
@@ -71,7 +71,7 @@ def train_agent(episodes=1000, update_target_model_episodes=100, render=False, u
         # Update target model every C episodes
         if episode % update_target_model_episodes == 0:
             agent.update_target_model()
-            agent.save_model('dqn_model.pth')
+            agent.save_model('cnn_dqn_model.pth')
 
     if use_dqn:
         agent.save_model('cnn_dqn_model.pth')
@@ -134,7 +134,7 @@ if __name__ == "__main__":
     USE_DQN = True  # 设置为 False 使用 Q-learning
 
     print("Training the agent...")
-    train_agent(episodes=10000, update_target_model_episodes=100, render=False, use_dqn=USE_DQN)
+    train_agent(episodes=10000, update_target_model_episodes=100, render=True, use_dqn=USE_DQN)
 
     print("\nPlaying with the trained agent...")
     play_game(episodes=15, use_dqn=USE_DQN)
