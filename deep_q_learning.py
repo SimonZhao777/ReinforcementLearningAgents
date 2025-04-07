@@ -97,7 +97,7 @@ class DQNAgent:
 
     def get_avg_loss(self):
         if len(self.losses) == 0:
-            return
+            return 0.0
         avg_loss = sum(self.losses) / len(self.losses)
         # print(f"Episode: {episode}, Average Loss: {avg_loss:.4f}")
         self.losses.clear()  # Clear the losses after printing

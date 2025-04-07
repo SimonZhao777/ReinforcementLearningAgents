@@ -4,14 +4,14 @@ from q_learning import QLearningAgent
 from deep_q_learning import DQNAgent
 import numpy as np
 
-def train_agent(episodes=1000, update_target_model_episodes=100, render=False, use_dqn=False):
+def train_agent(episodes=1000, update_target_model_episodes=100, render=False, use_dqn=False, action_size=4):
     # Initialize game
     game = CatchGame()
 
     # Initialize agent based on user choice
     if use_dqn:
         state_size = len(game.reset())
-        action_size = 2  # Left and Right
+        # action_size = 2  # Left and Right
         agent = DQNAgent(state_size, action_size)
     else:
         agent = QLearningAgent()
@@ -66,13 +66,13 @@ def train_agent(episodes=1000, update_target_model_episodes=100, render=False, u
         agent.save_q_table('q_table.npy')
     game.close()
 
-def play_game(episodes=5, use_dqn=False):
+def play_game(episodes=5, use_dqn=False, action_size=4):
     # Load the trained agent
     game = CatchGame()
 
     if use_dqn:
         state_size = len(game.reset())
-        action_size = 4  # Left and Right
+        # action_size = 4  # Left and Right
         agent = DQNAgent(state_size, action_size)
         agent.load_model('dqn_model.pth')
     else:
@@ -100,11 +100,12 @@ def play_game(episodes=5, use_dqn=False):
 if __name__ == "__main__":
     # Choose between Q-learning and DQN
     USE_DQN = True  # Set to False to use Q-learning instead
+    action_size = 4
 
     # Train the agent
     print("Training the agent...")
-    train_agent(episodes=10000, update_target_model_episodes=100, render=False, use_dqn=USE_DQN)
+    train_agent(episodes=20000, update_target_model_episodes=100, render=False, use_dqn=USE_DQN, action_size=action_size)
 
     # Play with the trained agent
     print("\nPlaying with the trained agent...")
-    play_game(episodes=15, use_dqn=USE_DQN)
+    play_game(episodes=15, use_dqn=USE_DQN, action_size=action_size)
