@@ -6,7 +6,7 @@ import torch.nn as nn
 import torch.optim as optim
 
 class DQNAgent:
-    def __init__(self, state_size, action_size, frame_stack=4, learning_rate=0.0005, discount_factor=0.99, epsilon=1.0):
+    def __init__(self, state_size, action_size, frame_stack=4, learning_rate=0.0005, discount_factor=0.99, epsilon=1.0, memory_size=1000000):
         self.state_size = state_size  # 图像大小 (84, 84, 3)
         self.action_size = action_size
         self.frame_stack = frame_stack  # 使用连续的帧数
@@ -16,7 +16,7 @@ class DQNAgent:
         self.epsilon_decay = 0.999
         self.min_epsilon = 0.01
         self.batch_size = 128
-        self.memory = deque(maxlen=10000)
+        self.memory = deque(maxlen=memory_size)
 
         # 检查 GPU 是否可用
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -104,9 +104,13 @@ class DQNAgent:
         self.epsilon = max(self.min_epsilon, self.epsilon * self.epsilon_decay)
 
     def save_model(self, filename):
+        """Saves the current model's state dictionary."""
+        print(f"Saving model to {filename}")
         torch.save(self.model.state_dict(), filename)
 
     def load_model(self, filename):
+        """Loads a saved model state dictionary."""
+        print(f"Loading model from {filename}")
         self.model.load_state_dict(torch.load(filename, map_location=self.device))
         self.update_target_model()
 

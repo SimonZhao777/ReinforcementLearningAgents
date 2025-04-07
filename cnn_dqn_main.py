@@ -6,7 +6,7 @@ from cnn_deep_q_learning import DQNAgent
 from q_learning import QLearningAgent
 import numpy as np
 
-def train_agent(episodes=1000, update_target_model_episodes=100, use_dqn=True, action_size=3, frame_stack=4):
+def train_agent(episodes=1000, update_target_model_steps=200000, decay_epsilon_steps=1000, use_dqn=True, action_size=3, frame_stack=4):
     game = CatchGame()
     # frame_stack = 4  # 使用 4 帧作为一个状态
 
@@ -22,7 +22,10 @@ def train_agent(episodes=1000, update_target_model_episodes=100, use_dqn=True, a
         agent = QLearningAgent()
 
     # 训练循环
+    total_steps = 0
     for episode in range(episodes):
+        game.reset()
+        game.render()
         if use_dqn:
             state_frames.clear()
             state_frames.extend([np.zeros((84, 84, 3)) for _ in range(frame_stack)])
@@ -33,6 +36,7 @@ def train_agent(episodes=1000, update_target_model_episodes=100, use_dqn=True, a
 
         total_reward = 0
         done = False
+        episode_steps = 0
 
         while not done:
             game.render()
@@ -43,6 +47,10 @@ def train_agent(episodes=1000, update_target_model_episodes=100, use_dqn=True, a
 
             # 执行动作并获取下一状态
             reward, done = game.step(action)[1:]  # 先执行动作再获取最新的state
+            # # --- Reward Clipping ---
+            # reward = np.clip(reward, -1.0, 1.0)
+            reward = reward / 200.0
+
             game.render()  # 需要先render才能get_screen
             next_screen = game.get_screen()
             state_frames.append(next_screen)
@@ -58,8 +66,20 @@ def train_agent(episodes=1000, update_target_model_episodes=100, use_dqn=True, a
 
             state = next_state
             total_reward += reward
+            total_steps += 1
+            episode_steps += 1
 
-        agent.decay_epsilon()
+            # Optional: Add a max steps per episode check
+            # if episode_steps > max_steps_per_episode:
+            #     done = True
+
+            if total_steps % decay_epsilon_steps == 0:  # decay epsilon for every 100 steps
+                agent.decay_epsilon()
+
+            # Update target model every C episodes
+            if total_steps % update_target_model_steps == 0:
+                agent.update_target_model()
+                agent.save_model('cnn_dqn_model.pth')
 
         if episode % 10 == 0:
             if use_dqn:
@@ -67,10 +87,7 @@ def train_agent(episodes=1000, update_target_model_episodes=100, use_dqn=True, a
             else:
                 print(f"Episode: {episode}, Total Reward: {total_reward}, Epsilon: {agent.epsilon:.3f}")
 
-        # Update target model every C episodes
-        if episode % update_target_model_episodes == 0:
-            agent.update_target_model()
-            agent.save_model('cnn_dqn_model.pth')
+
 
     if use_dqn:
         agent.save_model('cnn_dqn_model.pth')
@@ -135,7 +152,7 @@ if __name__ == "__main__":
     frame_stack = 4  # 使用 4 帧作为一个状态
 
     print("Training the agent...")
-    train_agent(episodes=20000, update_target_model_episodes=500, use_dqn=USE_DQN, action_size=action_size, frame_stack=frame_stack)
+    train_agent(episodes=20000, update_target_model_steps=200000, decay_epsilon_steps=1000, use_dqn=USE_DQN, action_size=action_size, frame_stack=frame_stack)
 
     print("\nPlaying with the trained agent...")
     play_game(episodes=15, use_dqn=USE_DQN, action_size=action_size, frame_stack=frame_stack)
