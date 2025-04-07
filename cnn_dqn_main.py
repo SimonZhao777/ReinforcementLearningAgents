@@ -6,13 +6,12 @@ from cnn_deep_q_learning import DQNAgent
 from q_learning import QLearningAgent
 import numpy as np
 
-def train_agent(episodes=1000, update_target_model_episodes=100, use_dqn=True):
+def train_agent(episodes=1000, update_target_model_episodes=100, use_dqn=True, action_size=3, frame_stack=4):
     game = CatchGame()
-    frame_stack = 4  # 使用 4 帧作为一个状态
+    # frame_stack = 4  # 使用 4 帧作为一个状态
 
     if use_dqn:
         state_size = (84, 84, 3)  # RGB 图像大小
-        action_size = 4  # 动作数量
         agent = DQNAgent(state_size, action_size, frame_stack=frame_stack)
 
         # 初始化帧队列
@@ -62,7 +61,7 @@ def train_agent(episodes=1000, update_target_model_episodes=100, use_dqn=True):
 
         agent.decay_epsilon()
 
-        if episode % 1 == 0:
+        if episode % 10 == 0:
             if use_dqn:
                 print(f"Episode: {episode}, Total Reward: {total_reward}, Epsilon: {agent.epsilon:.3f}, Average Loss: {agent.get_avg_loss():.4f}")
             else:
@@ -79,13 +78,12 @@ def train_agent(episodes=1000, update_target_model_episodes=100, use_dqn=True):
         agent.save_q_table('q_table.npy')
     game.close()
 
-def play_game(episodes=5, use_dqn=True):
+def play_game(episodes=5, use_dqn=True, action_size=3, frame_stack=4):
     game = CatchGame()
-    frame_stack = 4  # 使用 4 帧作为一个状态
+    # frame_stack = 4  # 使用 4 帧作为一个状态
 
     if use_dqn:
         state_size = (84, 84, 3)  # RGB 图像大小
-        action_size = 4  # 动作数量
         agent = DQNAgent(state_size, action_size, frame_stack=frame_stack)
         agent.load_model('cnn_dqn_model.pth')
 
@@ -133,9 +131,11 @@ def play_game(episodes=5, use_dqn=True):
 
 if __name__ == "__main__":
     USE_DQN = True  # 设置为 False 使用 Q-learning
+    action_size = 3  # Set action space to 3 (0: stay still, 1: move left, 2: move right)
+    frame_stack = 4  # 使用 4 帧作为一个状态
 
     print("Training the agent...")
-    train_agent(episodes=10000, update_target_model_episodes=50, use_dqn=USE_DQN)
+    train_agent(episodes=20000, update_target_model_episodes=500, use_dqn=USE_DQN, action_size=action_size, frame_stack=frame_stack)
 
     print("\nPlaying with the trained agent...")
-    play_game(episodes=15, use_dqn=USE_DQN)
+    play_game(episodes=15, use_dqn=USE_DQN, action_size=action_size, frame_stack=frame_stack)

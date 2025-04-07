@@ -6,16 +6,16 @@ import torch.nn as nn
 import torch.optim as optim
 
 class DQNAgent:
-    def __init__(self, state_size, action_size, frame_stack=4, learning_rate=0.001, discount_factor=0.99, epsilon=1.0):
+    def __init__(self, state_size, action_size, frame_stack=4, learning_rate=0.0005, discount_factor=0.99, epsilon=1.0):
         self.state_size = state_size  # 图像大小 (84, 84, 3)
         self.action_size = action_size
         self.frame_stack = frame_stack  # 使用连续的帧数
         self.learning_rate = learning_rate
         self.discount_factor = discount_factor
         self.epsilon = epsilon
-        self.epsilon_decay = 0.995
+        self.epsilon_decay = 0.999
         self.min_epsilon = 0.01
-        self.batch_size = 32
+        self.batch_size = 128
         self.memory = deque(maxlen=10000)
 
         # 检查 GPU 是否可用

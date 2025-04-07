@@ -6,15 +6,15 @@ import torch.nn as nn
 import torch.optim as optim
 
 class DQNAgent:
-    def __init__(self, state_size, action_size, learning_rate=0.001, discount_factor=0.99, epsilon=1.0):
+    def __init__(self, state_size, action_size, learning_rate=0.0005, discount_factor=0.99, epsilon=1.0):
         self.state_size = state_size
         self.action_size = action_size
         self.learning_rate = learning_rate
         self.discount_factor = discount_factor
         self.epsilon = epsilon
-        self.epsilon_decay = 0.995
+        self.epsilon_decay = 0.999
         self.min_epsilon = 0.01
-        self.batch_size = 32
+        self.batch_size = 128
         self.memory = deque(maxlen=10000)
 
         # Check if GPU is available
@@ -47,6 +47,7 @@ class DQNAgent:
     def get_action(self, state, training=True):
         if training and np.random.rand() <= self.epsilon:
             return random.randrange(self.action_size)  # Explore
+        # Exploit during training or evaluation - gradients not needed for action selection
         with torch.no_grad():
             state_tensor = torch.FloatTensor(state).unsqueeze(0).to(self.device)
             q_values = self.model(state_tensor)

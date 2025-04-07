@@ -47,21 +47,34 @@ class CatchGame:
         
         return self.get_state()
     
-    def get_state(self):
-        # Discretize the state space for Q-learning
-        # State includes: player_x, target_x, target_y, and positions of obstacles
-        state = [
-            self.player_x // self.grid_size,  # Discretize player x position
-            self.player_y // self.grid_size,  # Discretize player x position
-            # (self.player_x - self.target_x) // self.grid_size,  # Discretize target x position
-            self.target_x // self.grid_size,  # Discretize target x position
-            self.target_y // self.grid_size,  # Discretize target y position
-        ]
-        # Add obstacle positions
-        for obs in self.obstacles:
-            # state.extend([(self.player_x - obs['x']) // self.grid_size, obs['y'] // self.grid_size])
-            state.extend([obs['x'] // self.grid_size, obs['y'] // self.grid_size])
-        return tuple(state)
+    def get_state(self, discretize_state_space=False):
+        if discretize_state_space:
+            # Discretize the state space for Q-learning
+            # State includes: player_x, target_x, target_y, and positions of obstacles
+            state = [
+                self.player_x // self.grid_size,  # Discretize player x position
+                self.player_y // self.grid_size,  # Discretize player x position
+                # (self.player_x - self.target_x) // self.grid_size,  # Discretize target x position
+                self.target_x // self.grid_size,  # Discretize target x position
+                self.target_y // self.grid_size,  # Discretize target y position
+            ]
+            # Add obstacle positions
+            for obs in self.obstacles:
+                # state.extend([(self.player_x - obs['x']) // self.grid_size, obs['y'] // self.grid_size])
+                state.extend([obs['x'] // self.grid_size, obs['y'] // self.grid_size])
+            return tuple(state)
+        else:
+            # State: Normalized continuous positions
+            state = [
+                self.player_x / self.width,
+                self.player_y / self.height,
+                self.target_x / self.width,
+                self.target_y / self.height,
+                ]
+            # Add normalized obstacle positions
+            for obs in self.obstacles:
+                state.extend([obs['x'] / self.width, obs['y'] / self.height])
+            return np.array(state, dtype=np.float32)
     
     def step(self, action):
         # Actions: 0 (left), 1 (right), 2 (up), 3 (down)
@@ -69,13 +82,14 @@ class CatchGame:
         done = False
         
         # Move player based on action
-        if action == 0:  # Left
+        # Action 0: Do nothing (stay still) - no elif needed
+        if action == 1:  # Left
             self.player_x = max(0, self.player_x - self.player_speed)
-        elif action == 1:  # Right
+        elif action == 2:  # Right
             self.player_x = min(self.width - self.player_size, self.player_x + self.player_speed)
-        elif action == 2:  # Up
+        elif action == 3:  # Up
             self.player_y = max(0, self.player_y - self.player_speed)
-        elif action == 3:  # Down
+        elif action == 4:  # Down
             self.player_y = min(self.height - self.player_size, self.player_y + self.player_speed)
         
         # Move target
@@ -93,7 +107,7 @@ class CatchGame:
                              self.target_x, self.target_y, self.target_size):
             reward = 200
             done = True
-            self.reset()
+            # self.reset()
         
         # Check for obstacle collisions
         for obs in self.obstacles:
@@ -101,7 +115,7 @@ class CatchGame:
                                  obs['x'], obs['y'], self.obstacle_size):
                 reward = -50
                 done = True
-                self.reset()
+                # self.reset()
                 break
         
         # Check if target is missed
